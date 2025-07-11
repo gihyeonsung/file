@@ -10,6 +10,6 @@ func NewFileFind(fileRepository domain.FileRepository) *FileFind {
 	return &FileFind{fileRepository: fileRepository}
 }
 
-func (u *FileFind) Execute(criteria domain.FileRepositoryCriteria) (domain.FileRepositoryResult, error) {
+func (u *FileFind) Execute(criteria *domain.FileRepositoryCriteria) (*domain.FileRepositoryResult, error) {
 	return u.fileRepository.Find(criteria)
 }

@@ -13,6 +13,6 @@ type FileRepositoryResult struct {
 type FileRepository interface {
 	Save(file *File) error
 	FindOne(id string) (*File, error)
-	Find(criteria FileRepositoryCriteria) (FileRepositoryResult, error)
+	Find(criteria *FileRepositoryCriteria) (*FileRepositoryResult, error)
 	Delete(id string) error
 }

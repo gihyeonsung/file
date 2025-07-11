@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/gihyeonsung/file/internal/domain"
@@ -98,59 +97,57 @@ func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 	return &file, nil
 }
 
-func (r *SqliteFileRepository) Find(criteria domain.FileRepositoryCriteria) (domain.FileRepositoryResult, error) {
-	var conditions []string
+func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*domain.FileRepositoryResult, error) {
+	query := `
+		SELECT id, created_at, updated_at, path, path_remote, size
+		FROM files
+		WHERE true
+	`
 	var args []interface{}
 
-	if len(criteria.Ids) > 0 {
+	if criteria != nil && len(criteria.Ids) > 0 {
 		placeholders := make([]string, len(criteria.Ids))
 		for i := range criteria.Ids {
 			placeholders[i] = "?"
 		}
-		conditions = append(conditions, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
+
+		query += " AND id IN (" + strings.Join(placeholders, ",") + ")"
 		for _, id := range criteria.Ids {
 			args = append(args, id)
 		}
 	}
 
-	if len(criteria.Paths) > 0 {
+	if criteria != nil && len(criteria.Paths) > 0 {
 		placeholders := make([]string, len(criteria.Paths))
 		for i := range criteria.Paths {
 			placeholders[i] = "?"
 		}
-		conditions = append(conditions, fmt.Sprintf("path IN (%s)", strings.Join(placeholders, ",")))
+		query += " AND path IN (" + strings.Join(placeholders, ",") + ")"
 		for _, path := range criteria.Paths {
 			args = append(args, path)
 		}
 	}
 
-	if len(criteria.PathsLike) > 0 {
-		likeConditions := make([]string, len(criteria.PathsLike))
-		for i, path := range criteria.PathsLike {
-			likeConditions[i] = "path LIKE ?"
-			args = append(args, path)
+	if criteria != nil && len(criteria.PathsLike) > 0 {
+		placeholders := make([]string, len(criteria.PathsLike))
+		for i := range criteria.PathsLike {
+			placeholders[i] = "?"
 		}
-		conditions = append(conditions, fmt.Sprintf("(%s)", strings.Join(likeConditions, " OR ")))
+		query += " AND path LIKE (" + strings.Join(placeholders, ",") + ")"
+		for _, path := range criteria.PathsLike {
+			args = append(args, "%"+path+"%")
+		}
 	}
 
-	query := `
-		SELECT id, created_at, updated_at, path, path_remote, size
-		FROM files
-	`
-
-	if len(conditions) > 0 {
-		query += " WHERE " + strings.Join(conditions, " AND ")
-	}
-
-	query += " ORDER BY created_at DESC"
+	query += " ORDER BY path ASC"
 
 	rows, err := r.db.Query(query, args...)
 	if err != nil {
-		return domain.FileRepositoryResult{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	var files []*domain.File
+	files := make([]*domain.File, 0)
 
 	for rows.Next() {
 		var file domain.File
@@ -167,7 +164,7 @@ func (r *SqliteFileRepository) Find(criteria domain.FileRepositoryCriteria) (dom
 		)
 
 		if err != nil {
-			return domain.FileRepositoryResult{}, err
+			return nil, err
 		}
 
 		if pathRemote.Valid {
@@ -183,10 +180,10 @@ func (r *SqliteFileRepository) Find(criteria domain.FileRepositoryCriteria) (dom
 	}
 
 	if err = rows.Err(); err != nil {
-		return domain.FileRepositoryResult{}, err
+		return nil, err
 	}
 
-	return domain.FileRepositoryResult{Files: files}, nil
+	return &domain.FileRepositoryResult{Files: files}, nil
 }
 
 func (r *SqliteFileRepository) Delete(id string) error {

@@ -7,12 +7,12 @@ import (
 )
 
 type File struct {
-	Id         string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Path       string
-	PathRemote *string // path at remote storage
-	Size       *int    // in bytes
+	Id         string    `json:"id"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	Path       string    `json:"path"`
+	PathRemote *string   `json:"pathRemote"` // path at remote storage
+	Size       *int      `json:"size"`       // in bytes
 }
 
 func NewFile(path string) (*File, error) {
