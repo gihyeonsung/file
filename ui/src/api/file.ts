@@ -38,15 +38,34 @@ export const postFiles = async (path: string): Promise<File> => {
 
 export const postFilesId = async (
   id: string,
-  data: FormData
+  data: FormData,
+  onProgress: (p: number) => void
 ): Promise<null> => {
-  const response = await fetch(`/api/v1/files/${id}`, {
-    method: "POST",
-    body: data,
-  });
-  await response.json();
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
 
-  return null;
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        const progress = (event.loaded / event.total) * 100;
+        onProgress(progress);
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(null);
+      } else {
+        reject(new Error(`Upload failed with status: ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(new Error("Upload failed"));
+    });
+
+    xhr.open("POST", `/api/v1/files/${id}`);
+    xhr.send(data);
+  });
 };
 
 export const deleteFilesId = async (id: string): Promise<File> => {

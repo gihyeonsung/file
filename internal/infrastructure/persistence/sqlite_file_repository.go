@@ -38,12 +38,13 @@ func (r *SqliteFileRepository) Migrate() error {
 
 func (r *SqliteFileRepository) Save(file *domain.File) error {
 	query := `
-		INSERT OR REPLACE INTO files (id, created_at, updated_at, path, path_remote, size)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT OR REPLACE INTO files (id, created_at, updated_at, path, path_remote, size, mime_type)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	var pathRemote sql.NullString
 	var size sql.NullInt64
+	var mimeType sql.NullString
 
 	if file.PathRemote != nil {
 		pathRemote.String = *file.PathRemote
@@ -55,13 +56,18 @@ func (r *SqliteFileRepository) Save(file *domain.File) error {
 		size.Valid = true
 	}
 
-	_, err := r.db.Exec(query, file.Id, file.CreatedAt, file.UpdatedAt, file.Path, pathRemote, size)
+	if file.MimeType != nil {
+		mimeType.String = *file.MimeType
+		mimeType.Valid = true
+	}
+
+	_, err := r.db.Exec(query, file.Id, file.CreatedAt, file.UpdatedAt, file.Path, pathRemote, size, mimeType)
 	return err
 }
 
 func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 	query := `
-		SELECT id, created_at, updated_at, path, path_remote, size
+		SELECT id, created_at, updated_at, path, path_remote, size, mime_type
 		FROM files
 		WHERE id = ?
 	`
@@ -69,6 +75,7 @@ func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 	var file domain.File
 	var pathRemote sql.NullString
 	var size sql.NullInt64
+	var mimeType sql.NullString
 
 	err := r.db.QueryRow(query, id).Scan(
 		&file.Id,
@@ -77,6 +84,7 @@ func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 		&file.Path,
 		&pathRemote,
 		&size,
+		&mimeType,
 	)
 
 	if err != nil {
@@ -95,12 +103,16 @@ func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 		file.Size = &sizeInt
 	}
 
+	if mimeType.Valid {
+		file.MimeType = &mimeType.String
+	}
+
 	return &file, nil
 }
 
 func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*domain.FileRepositoryResult, error) {
 	query := `
-		SELECT id, created_at, updated_at, path, path_remote, size
+		SELECT id, created_at, updated_at, path, path_remote, size, mime_type
 		FROM files
 		WHERE true
 	`
@@ -154,6 +166,7 @@ func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*d
 		var file domain.File
 		var pathRemote sql.NullString
 		var size sql.NullInt64
+		var mimeType sql.NullString
 
 		err := rows.Scan(
 			&file.Id,
@@ -162,6 +175,7 @@ func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*d
 			&file.Path,
 			&pathRemote,
 			&size,
+			&mimeType,
 		)
 
 		if err != nil {
@@ -175,6 +189,10 @@ func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*d
 		if size.Valid {
 			sizeInt := int(size.Int64)
 			file.Size = &sizeInt
+		}
+
+		if mimeType.Valid {
+			file.MimeType = &mimeType.String
 		}
 
 		files = append(files, &file)

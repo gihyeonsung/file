@@ -12,9 +12,11 @@ import {
 const File = ({
   file,
   handleDelete,
+  uploadingProgress,
 }: {
   file: File;
   handleDelete: () => void;
+  uploadingProgress: number | null;
 }) => {
   const [isHovering, setIsHovering] = useState(false);
 
@@ -80,6 +82,11 @@ const File = ({
     >
       <div className="text-sm text-neutral-500">{file.path}</div>
       <div className="text-sm text-neutral-500">{sizeString}</div>
+      {uploadingProgress !== null && (
+        <div className="text-sm text-neutral-500">
+          {uploadingProgress.toFixed(2)}%
+        </div>
+      )}
 
       {isHovering && (
         <div className="text-sm text-neutral-500" onClick={handleClickDelete}>
@@ -93,6 +100,8 @@ const File = ({
 function App() {
   const [path] = useState<string>("/");
   const [files, setFiles] = useState<File[]>([]);
+  const [uploadingFileId, setUploadingFileId] = useState<string | null>(null);
+  const [uploadingProgress, setUploadingProgress] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -112,10 +121,18 @@ function App() {
       const p = path + f.name;
       await postFiles(p);
 
-      const fileUploaded = await getFiles(null, [p], null);
+      const fileUploaded = (await getFiles(null, [p], null))[0];
+      setFiles((files) => [...files, fileUploaded].sort((a, b) => a.path.localeCompare(b.path)));
+
       const formData = new FormData();
       formData.append("file", f);
-      await postFilesId(fileUploaded[0].id, formData);
+      setUploadingFileId(fileUploaded.id);
+      setUploadingProgress(0);
+      await postFilesId(fileUploaded.id, formData, (p) => {
+        setUploadingProgress(p);
+      });
+      setUploadingFileId(null);
+      setUploadingProgress(null);
 
       const files = await getFiles(null, null, [path]);
       setFiles(files);
@@ -144,6 +161,9 @@ function App() {
                 key={f.id}
                 file={f}
                 handleDelete={() => handleDelete(f.id)}
+                uploadingProgress={
+                  uploadingFileId === f.id ? uploadingProgress : null
+                }
               />
             );
           })}

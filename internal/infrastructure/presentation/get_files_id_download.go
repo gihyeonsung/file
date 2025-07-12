@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 func (c *FileController) handleFilesIdDownload(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	f, mimeType, err := c.fileDownload.Execute(id)
+	f, mimeType, fileSize, err := c.fileDownload.Execute(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(struct {
@@ -23,7 +24,8 @@ func (c *FileController) handleFilesIdDownload(w http.ResponseWriter, r *http.Re
 	}
 	defer f.Close()
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", *mimeType)
+	w.Header().Set("Content-Length", strconv.Itoa(*fileSize))
+	w.WriteHeader(http.StatusOK)
 	io.Copy(w, f)
 }
