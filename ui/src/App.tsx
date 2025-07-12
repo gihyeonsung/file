@@ -118,6 +118,10 @@ function App() {
     e.preventDefault();
 
     for (const f of e.dataTransfer.files) {
+      if (f.type === "" && f.size === 0) {
+        continue;
+      }
+      
       const p = path + f.name;
       await postFiles(p);
 
