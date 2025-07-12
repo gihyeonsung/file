@@ -2,7 +2,6 @@ package presentation
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 )
 
@@ -35,22 +34,10 @@ func (c *FileController) handleFilesPostIdUpload(w http.ResponseWriter, r *http.
 		})
 		return
 	}
+	defer part.Close()
 
 	mimeType := part.Header.Get("Content-Type")
-	data, err := io.ReadAll(part)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(struct {
-			Status int    `json:"status"`
-			Error  string `json:"error"`
-		}{
-			Status: http.StatusInternalServerError,
-			Error:  err.Error(),
-		})
-		return
-	}
-
-	err = c.fileUpload.Execute(id, data, mimeType)
+	err = c.fileUpload.Execute(id, part, mimeType)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(struct {

@@ -1,6 +1,10 @@
 package application
 
-import "github.com/gihyeonsung/file/internal/domain"
+import (
+	"io"
+
+	"github.com/gihyeonsung/file/internal/domain"
+)
 
 type FileUpload struct {
 	fileRepository domain.FileRepository
@@ -11,19 +15,18 @@ func NewFileUpload(fileRepository domain.FileRepository, fileService FileService
 	return &FileUpload{fileRepository: fileRepository, fileService: fileService}
 }
 
-func (u *FileUpload) Execute(id string, data []byte, mimeType string) error {
+func (u *FileUpload) Execute(id string, r io.Reader, mimeType string) error {
 	file, err := u.fileRepository.FindOne(id)
 	if err != nil {
 		return err
 	}
 
-	err = u.fileService.Write(file.Path, data)
+	size, err := u.fileService.Write(file.Path, r)
 	if err != nil {
 		return err
 	}
 
 	pathRemote := file.Path
-	size := len(data)
 	file.Upload(pathRemote, size, mimeType)
 
 	return u.fileRepository.Save(file)

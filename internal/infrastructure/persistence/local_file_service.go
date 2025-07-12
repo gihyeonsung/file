@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -13,21 +14,27 @@ func NewLocalFileService(pathBase string) *LocalFileService {
 	return &LocalFileService{pathBase: pathBase}
 }
 
-func (s *LocalFileService) Write(path string, data []byte) error {
+func (s *LocalFileService) Write(path string, r io.Reader) (int, error) {
 	path = filepath.Join(s.pathBase, path)
 
-	err := os.WriteFile(path, data, 0644)
+	file, err := os.Create(path)
 	if err != nil {
-		return err
+		return 0, err
+	}
+	defer file.Close()
+
+	size, err := io.Copy(file, r)
+	if err != nil {
+		return 0, err
 	}
 
-	return nil
+	return int(size), nil
 }
 
-func (s *LocalFileService) Read(path string) ([]byte, error) {
+func (s *LocalFileService) Read(path string) (io.ReadCloser, error) {
 	path = filepath.Join(s.pathBase, path)
 
-	return os.ReadFile(path)
+	return os.Open(path)
 }
 
 func (s *LocalFileService) Delete(path string) error {

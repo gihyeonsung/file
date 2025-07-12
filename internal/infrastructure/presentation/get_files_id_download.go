@@ -2,13 +2,14 @@ package presentation
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
 func (c *FileController) handleFilesIdDownload(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	bytes, err := c.fileDownload.Execute(id)
+	f, mimeType, err := c.fileDownload.Execute(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(struct {
@@ -20,7 +21,9 @@ func (c *FileController) handleFilesIdDownload(w http.ResponseWriter, r *http.Re
 		})
 		return
 	}
+	defer f.Close()
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(bytes)
+	w.Header().Set("Content-Type", *mimeType)
+	io.Copy(w, f)
 }

@@ -2,6 +2,7 @@ package application
 
 import (
 	"errors"
+	"io"
 
 	"github.com/gihyeonsung/file/internal/domain"
 )
@@ -15,24 +16,24 @@ func NewFileDownload(fileRepository domain.FileRepository, fileService FileServi
 	return &FileDownload{fileRepository: fileRepository, fileService: fileService}
 }
 
-func (u *FileDownload) Execute(id string) ([]byte, error) {
+func (u *FileDownload) Execute(id string) (io.ReadCloser, *string, error) {
 	file, err := u.fileRepository.FindOne(id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if file == nil {
-		return nil, errors.New("file not found")
+		return nil, nil, errors.New("no metadata")
 	}
 
 	if file.PathRemote == nil {
-		return nil, errors.New("file not found")
+		return nil, nil, errors.New("no remote path")
 	}
 
-	bytes, err := u.fileService.Read(*file.PathRemote)
+	r, err := u.fileService.Read(*file.PathRemote)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return bytes, nil
+	return r, file.MimeType, nil
 }
