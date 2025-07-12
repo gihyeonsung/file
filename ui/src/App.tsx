@@ -9,7 +9,13 @@ import {
   postFilesId,
 } from "./api/file";
 
-const File = ({ file }: { file: File }) => {
+const File = ({
+  file,
+  handleDelete,
+}: {
+  file: File;
+  handleDelete: () => void;
+}) => {
   const [isHovering, setIsHovering] = useState(false);
 
   const sizeInBytes = file.size ?? 0;
@@ -62,7 +68,7 @@ const File = ({ file }: { file: File }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    await deleteFilesId(file.id);
+    handleDelete();
   };
 
   return (
@@ -116,6 +122,12 @@ function App() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    await deleteFilesId(id);
+    const files = await getFiles(null, null, [path]);
+    setFiles(files);
+  };
+
   return (
     <div
       className="flex flex-col items-center h-screen"
@@ -123,11 +135,17 @@ function App() {
       onDrop={handleDrop}
     >
       <div className="w-full h-full p-4">
-        <h1 className="text-lg font-bold text-neutral-700">{path}</h1>
+        <h1 className="text-sm font-bold text-neutral-700">{path}</h1>
 
         <div className="flex flex-col">
           {files.map((f) => {
-            return <File key={f.id} file={f} />;
+            return (
+              <File
+                key={f.id}
+                file={f}
+                handleDelete={() => handleDelete(f.id)}
+              />
+            );
           })}
         </div>
       </div>

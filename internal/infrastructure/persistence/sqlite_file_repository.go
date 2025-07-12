@@ -23,7 +23,8 @@ func (r *SqliteFileRepository) Migrate() error {
 			updated_at DATETIME NOT NULL,
 			path TEXT NOT NULL,
 			path_remote TEXT,
-			size INTEGER
+			size INTEGER,
+			mime_type TEXT
 		)
 	`
 

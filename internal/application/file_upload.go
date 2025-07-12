@@ -11,7 +11,7 @@ func NewFileUpload(fileRepository domain.FileRepository, fileService FileService
 	return &FileUpload{fileRepository: fileRepository, fileService: fileService}
 }
 
-func (u *FileUpload) Execute(id string, data []byte) error {
+func (u *FileUpload) Execute(id string, data []byte, mimeType string) error {
 	file, err := u.fileRepository.FindOne(id)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (u *FileUpload) Execute(id string, data []byte) error {
 
 	pathRemote := file.Path
 	size := len(data)
-	file.Upload(pathRemote, size)
+	file.Upload(pathRemote, size, mimeType)
 
 	return u.fileRepository.Save(file)
 }

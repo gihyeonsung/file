@@ -22,42 +22,35 @@ func (c *FileController) handleFilesPostIdUpload(w http.ResponseWriter, r *http.
 
 	id := r.PathValue("id")
 
-	data := []byte{}
-	for {
-		part, err := form.NextPart()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(struct {
-				Status int    `json:"status"`
-				Error  string `json:"error"`
-			}{
-				Status: http.StatusInternalServerError,
-				Error:  err.Error(),
-			})
-			return
-		}
-
-		partData, err := io.ReadAll(part)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(struct {
-				Status int    `json:"status"`
-				Error  string `json:"error"`
-			}{
-				Status: http.StatusInternalServerError,
-				Error:  err.Error(),
-			})
-			return
-		}
-
-		data = append(data, partData...)
+	// only one part per request. no loop.
+	part, err := form.NextPart()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(struct {
+			Status int    `json:"status"`
+			Error  string `json:"error"`
+		}{
+			Status: http.StatusInternalServerError,
+			Error:  err.Error(),
+		})
+		return
 	}
 
-	err = c.fileUpload.Execute(id, data)
+	mimeType := part.Header.Get("Content-Type")
+	data, err := io.ReadAll(part)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(struct {
+			Status int    `json:"status"`
+			Error  string `json:"error"`
+		}{
+			Status: http.StatusInternalServerError,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	err = c.fileUpload.Execute(id, data, mimeType)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(struct {
