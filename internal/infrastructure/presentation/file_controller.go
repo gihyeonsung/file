@@ -1,7 +1,9 @@
 package presentation
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gihyeonsung/file/internal/application"
 )
@@ -31,15 +33,18 @@ func NewFileController(
 }
 
 func (c *FileController) handleFiles(w http.ResponseWriter, r *http.Request) {
+	t := time.Now()
 	switch r.Method {
 	case http.MethodGet:
 		c.handleFilesGet(w, r)
 	case http.MethodPost:
 		c.handleFilesPost(w, r)
 	}
+	log.Printf("%s %s - %s - %dms", r.Method, r.URL.Path, r.RemoteAddr, time.Since(t).Milliseconds())
 }
 
 func (c *FileController) handleFilesId(w http.ResponseWriter, r *http.Request) {
+	t := time.Now()
 	switch r.Method {
 	case http.MethodGet:
 		c.handleFilesIdDownload(w, r)
@@ -48,4 +53,5 @@ func (c *FileController) handleFilesId(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		c.handleFilesDeleteId(w, r)
 	}
+	log.Printf("%s %s - %s - %dms", r.Method, r.URL.Path, r.RemoteAddr, time.Since(t).Milliseconds())
 }
