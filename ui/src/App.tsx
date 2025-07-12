@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
 
 import type { File } from "./types/file";
-import { getFiles, getFilesId, postFiles, postFilesId } from "./api/file";
+import {
+  deleteFilesId,
+  getFiles,
+  getFilesId,
+  postFiles,
+  postFilesId,
+} from "./api/file";
 
 const File = ({ file }: { file: File }) => {
+  const [isHovering, setIsHovering] = useState(false);
+
   const sizeInBytes = file.size ?? 0;
   const sizeInKb = Math.round(sizeInBytes / 1024);
   const sizeInMb = Math.round(sizeInBytes / 1024 / 1024);
@@ -40,10 +48,38 @@ const File = ({ file }: { file: File }) => {
     }
   };
 
+  const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsHovering(false);
+  };
+
+  const handleClickDelete = async (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    await deleteFilesId(file.id);
+  };
+
   return (
-    <div className="flex flex-row gap-2 cursor-pointer" onClick={handleClick}>
+    <div
+      className="flex flex-row gap-2 cursor-pointer hover:bg-neutral-100"
+      onClick={handleClick}
+      onMouseOver={handleMouseOver}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="text-sm text-neutral-500">{file.path}</div>
       <div className="text-sm text-neutral-500">{sizeString}</div>
+
+      {isHovering && (
+        <div className="text-sm text-neutral-500" onClick={handleClickDelete}>
+          delete
+        </div>
+      )}
     </div>
   );
 };
@@ -67,8 +103,6 @@ function App() {
     e.preventDefault();
 
     for (const f of e.dataTransfer.files) {
-      console.log(f.type, f.name, f);
-
       const p = path + f.name;
       await postFiles(p);
 
@@ -88,15 +122,15 @@ function App() {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-        <div className="w-full h-full p-4">
-          <h1 className="text-lg font-bold text-neutral-700">{path}</h1>
+      <div className="w-full h-full p-4">
+        <h1 className="text-lg font-bold text-neutral-700">{path}</h1>
 
-          <div className="flex flex-col">
-            {files.map((f) => {
-              return <File key={f.id} file={f} />;
-            })}
-          </div>
+        <div className="flex flex-col">
+          {files.map((f) => {
+            return <File key={f.id} file={f} />;
+          })}
         </div>
+      </div>
     </div>
   );
 }
