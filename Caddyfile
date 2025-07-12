@@ -1,0 +1,6 @@
+:80 {
+	reverse_proxy /api/* file:8080
+
+	reverse_proxy / file-ui:80
+	reverse_proxy /assets/* file-ui:80
+}

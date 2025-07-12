@@ -1,0 +1,23 @@
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - 5252:80
+    volumes:
+      - ${PWD}/Caddyfile:/etc/caddy/Caddyfile
+
+  file:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/data:/app/data
+      - ${PWD}/file.db:/app/file.db
+  
+  file-ui:
+    restart: unless-stopped
+    build:
+      context: ui
+      dockerfile: Dockerfile
