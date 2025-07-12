@@ -1,6 +1,7 @@
 package application
 
 import (
+	"errors"
 	"io"
 
 	"github.com/gihyeonsung/file/internal/domain"
@@ -19,6 +20,10 @@ func (u *FileUpload) Execute(id string, r io.Reader, mimeType string) error {
 	file, err := u.fileRepository.FindOne(id)
 	if err != nil {
 		return err
+	}
+
+	if file.PathRemote != nil {
+		return errors.New("already uploaded")
 	}
 
 	size, err := u.fileService.Write(file.Path, r)
