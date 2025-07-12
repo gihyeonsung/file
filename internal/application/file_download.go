@@ -16,7 +16,7 @@ func NewFileDownload(fileRepository domain.FileRepository, fileService FileServi
 	return &FileDownload{fileRepository: fileRepository, fileService: fileService}
 }
 
-func (u *FileDownload) Execute(id string) (io.ReadCloser, *string, *int, error) {
+func (u *FileDownload) Execute(id string) (io.ReadCloser, *string, *int64, error) {
 	file, err := u.fileRepository.FindOne(id)
 	if err != nil {
 		return nil, nil, nil, err

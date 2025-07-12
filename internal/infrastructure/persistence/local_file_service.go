@@ -14,7 +14,7 @@ func NewLocalFileService(pathBase string) *LocalFileService {
 	return &LocalFileService{pathBase: pathBase}
 }
 
-func (s *LocalFileService) Write(path string, r io.Reader) (int, error) {
+func (s *LocalFileService) Write(path string, r io.Reader) (int64, error) {
 	path = filepath.Join(s.pathBase, path)
 
 	file, err := os.Create(path)
@@ -28,7 +28,7 @@ func (s *LocalFileService) Write(path string, r io.Reader) (int, error) {
 		return 0, err
 	}
 
-	return int(size), nil
+	return size, nil
 }
 
 func (s *LocalFileService) Read(path string) (io.ReadCloser, error) {

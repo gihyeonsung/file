@@ -12,7 +12,7 @@ type File struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 	Path       string    `json:"path"`
 	PathRemote *string   `json:"pathRemote"` // path at remote storage
-	Size       *int      `json:"size"`       // in bytes
+	Size       *int64    `json:"size"`       // in bytes
 	MimeType   *string   `json:"mimeType"`
 }
 
@@ -35,7 +35,7 @@ func NewFile(path string) (*File, error) {
 	return file, nil
 }
 
-func (f *File) Upload(pathRemote string, size int, mimeType string) {
+func (f *File) Upload(pathRemote string, size int64, mimeType string) {
 	f.PathRemote = &pathRemote
 	f.Size = &size
 	f.MimeType = &mimeType

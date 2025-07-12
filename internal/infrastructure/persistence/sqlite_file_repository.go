@@ -99,8 +99,7 @@ func (r *SqliteFileRepository) FindOne(id string) (*domain.File, error) {
 	}
 
 	if size.Valid {
-		sizeInt := int(size.Int64)
-		file.Size = &sizeInt
+		file.Size = &size.Int64
 	}
 
 	if mimeType.Valid {
@@ -187,8 +186,7 @@ func (r *SqliteFileRepository) Find(criteria *domain.FileRepositoryCriteria) (*d
 		}
 
 		if size.Valid {
-			sizeInt := int(size.Int64)
-			file.Size = &sizeInt
+			file.Size = &size.Int64
 		}
 
 		if mimeType.Valid {

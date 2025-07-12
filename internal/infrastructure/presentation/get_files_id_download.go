@@ -25,7 +25,7 @@ func (c *FileController) handleFilesIdDownload(w http.ResponseWriter, r *http.Re
 	defer f.Close()
 
 	w.Header().Set("Content-Type", *mimeType)
-	w.Header().Set("Content-Length", strconv.Itoa(*fileSize))
+	w.Header().Set("Content-Length", strconv.FormatInt(*fileSize, 10))
 	w.WriteHeader(http.StatusOK)
 	io.Copy(w, f)
 }
