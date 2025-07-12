@@ -20,6 +20,6 @@ WORKDIR /app
 
 COPY --from=builder /app/file ./file
 
-RUN mkdir -p /data
+RUN mkdir db data
 
 CMD ["./file"]
